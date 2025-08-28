@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "retsuko-strategy", "retsuko-strategy.csproj", "{CFB6B406-8632-6CDE-8D12-344C0286DF96}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CFB6B406-8632-6CDE-8D12-344C0286DF96}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CFB6B406-8632-6CDE-8D12-344C0286DF96}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CFB6B406-8632-6CDE-8D12-344C0286DF96}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CFB6B406-8632-6CDE-8D12-344C0286DF96}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {09864980-1AB2-4855-BB55-536E4F6F2461}
+	EndGlobalSection
+EndGlobal
