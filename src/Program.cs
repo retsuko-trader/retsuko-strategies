@@ -24,6 +24,7 @@ builder.Services.AddOpenTelemetry()
     .AddSource(SERVICE_NAME)
     .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(SERVICE_NAME))
     .AddAspNetCoreInstrumentation()
+    .AddGrpcClientInstrumentation()
     .AddOtlpExporter(otlp => {
       otlp.Endpoint = new Uri(OTE_URL);
       otlp.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
