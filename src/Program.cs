@@ -2,6 +2,7 @@ using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using Retsuko.Strategies.GrpcHandlers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +17,7 @@ builder.Logging.AddOpenTelemetry(options => {
       otlp.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
     });
 });
+
 builder.Services.AddOpenTelemetry()
   .ConfigureResource(resource => resource.AddService(SERVICE_NAME))
   .WithTracing(tracing => tracing
@@ -34,11 +36,28 @@ builder.Services.AddOpenTelemetry()
     }));
 
 
+builder.WebHost.ConfigureKestrel(
+  options => {
+    var tempPath = Path.GetTempPath();
+    var sockPath = Path.Combine(tempPath, "retsuko.sock");
+    options.ListenUnixSocket(sockPath, listenOptions => {
+      listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2;
+    });
+  }
+);
+
+builder.Services.AddGrpc();
+
 builder.Services.AddSingleton(MyTracer.Tracer);
 builder.Services.AddControllers();
 
 var app = builder.Build();
+
 MyLogger.Logger = app.Logger;
 
 app.MapControllers();
+
+app.MapGrpcService<StrategyLoadService>();
+app.MapGrpcService<StrategyRunService>();
+
 app.Run();
