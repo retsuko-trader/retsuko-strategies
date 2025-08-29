@@ -65,14 +65,14 @@ public class SuperTrendStrategy: Strategy<SuperTrendStrategyConfig>, IStrategyCr
       return null;
     }
 
-    if (stopLoss.IsTriggered(candle.close)) {
+    if (stopLoss.IsTriggered(candle.Close)) {
       stopLoss.End();
       prevBuyConfidence = 0;
       return Signal.closeLong;
     }
 
-    if (candle.close > trend.superTrend) {
-      stopLoss.Begin(candle.close);
+    if (candle.Close > trend.superTrend) {
+      stopLoss.Begin(candle.Close);
       var conf = Math.Min(1, confidence * Config.confidenceMultiplier);
       if (conf - prevBuyConfidence < Config.confidenceBias) {
         return null;
@@ -82,7 +82,7 @@ public class SuperTrendStrategy: Strategy<SuperTrendStrategyConfig>, IStrategyCr
       return new Signal(SignalKind.openLong, conf);
     }
 
-    if (candle.close < trend.superTrend) {
+    if (candle.Close < trend.superTrend) {
       stopLoss.End();
       prevBuyConfidence = 0;
       return Signal.openShort;
@@ -99,10 +99,10 @@ public class SuperTrendStrategy: Strategy<SuperTrendStrategyConfig>, IStrategyCr
       return false;
     }
 
-    var close = candle.close;
+    var close = candle.Close;
 
-    trend.upperBandBasic = (candle.high + candle.low) / 2 + atr * Config.bandFactor;
-    trend.lowerBandBasic = (candle.high + candle.low) / 2 - atr * Config.bandFactor;
+    trend.upperBandBasic = (candle.High + candle.Low) / 2 + atr * Config.bandFactor;
+    trend.lowerBandBasic = (candle.High + candle.Low) / 2 - atr * Config.bandFactor;
 
     if (trend.upperBandBasic < lastTrend.upperBand || lastClose > lastTrend.upperBand) {
       trend.upperBand = trend.upperBandBasic;

@@ -68,7 +68,7 @@ public class TurtleStrategy: Strategy<TurtleStrategyConfig>, IStrategyCreate<Tur
       return null;
     }
 
-    if (candle.close < sma.Value) {
+    if (candle.Close < sma.Value) {
       return Signal.closeLong;
     }
 
@@ -85,7 +85,7 @@ public class TurtleStrategy: Strategy<TurtleStrategyConfig>, IStrategyCreate<Tur
   private Result? UpdateInner(Candle candle) {
     candles.GetByMod(age) = candle;
 
-    var price = candle.close;
+    var price = candle.Close;
     var status = (Result?)null;
 
     if (age >= Config.enterFast) {
@@ -124,8 +124,8 @@ public class TurtleStrategy: Strategy<TurtleStrategyConfig>, IStrategyCreate<Tur
 
     for (var i = 0; i < count; i++) {
       ref var candle = ref candles.GetByMod(age - i);
-      high = Math.Max(high, candle.close);
-      low = Math.Min(low, candle.close);
+      high = Math.Max(high, candle.Close);
+      low = Math.Min(low, candle.Close);
     }
 
     return (high, low);

@@ -23,9 +23,9 @@ public partial class Indicator {
 
     public void Update(Candle candle) {
       var tail = closes.GetByMod(age);
-      closes.GetByMod(age) = candle.close;
+      closes.GetByMod(age) = candle.Close;
 
-      sum += candle.close - tail;
+      sum += candle.Close - tail;
       Value = sum / period;
 
       if (!Ready && age + 1 >= period) {

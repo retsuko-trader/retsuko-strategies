@@ -25,9 +25,9 @@ public partial class Indicator {
     }
 
     public void Update(Candle candle) {
-      highs.GetByMod(age) = candle.high;
-      lows.GetByMod(age) = candle.low;
-      closes.GetByMod(age) = candle.close;
+      highs.GetByMod(age) = candle.High;
+      lows.GetByMod(age) = candle.Low;
+      closes.GetByMod(age) = candle.Close;
 
       var sum = highs.GetByMod(age + 1) - lows.GetByMod(age + 1);
       for (var i = 1; i < period; i++) {
