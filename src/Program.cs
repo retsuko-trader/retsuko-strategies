@@ -15,6 +15,7 @@ builder.Logging.AddOpenTelemetry(options => {
     .AddOtlpExporter(otlp => {
       otlp.Endpoint = new Uri(OTE_URL);
       otlp.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
+      otlp.ExportProcessorType = OpenTelemetry.ExportProcessorType.Simple;
     });
 });
 
@@ -28,12 +29,14 @@ builder.Services.AddOpenTelemetry()
     .AddOtlpExporter(otlp => {
       otlp.Endpoint = new Uri(OTE_URL);
       otlp.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
+      otlp.ExportProcessorType = OpenTelemetry.ExportProcessorType.Simple;
     }))
   .WithMetrics(metrics => metrics
     .AddAspNetCoreInstrumentation()
     .AddOtlpExporter(otlp => {
       otlp.Endpoint = new Uri(OTE_URL);
       otlp.Protocol = OpenTelemetry.Exporter.OtlpExportProtocol.Grpc;
+      otlp.ExportProcessorType = OpenTelemetry.ExportProcessorType.Simple;
     }));
 
 
