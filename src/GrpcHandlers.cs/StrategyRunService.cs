@@ -21,7 +21,7 @@ public class StrategyRunService : GStrategyRunner.GStrategyRunnerBase {
       strategy.Deserialize(create.State);
     }
 
-    while (await requestStream.MoveNext() && !context.CancellationToken.IsCancellationRequested) {
+    while (await requestStream.MoveNext(context.CancellationToken) && !context.CancellationToken.IsCancellationRequested) {
       var input = requestStream.Current;
       if (input.Preload != null) {
         await strategy.Preload(input.Preload.Candle);
