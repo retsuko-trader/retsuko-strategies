@@ -8,7 +8,6 @@ public class StrategyRunService : GStrategyRunner.GStrategyRunnerBase {
     await requestStream.MoveNext();
     var create = requestStream.Current.Create;
     if (create == null) {
-
       throw new RpcException(new Status(StatusCode.InvalidArgument, "First message must be Create"));
     }
 
