@@ -1,3 +1,4 @@
+using Google.Protobuf.Collections;
 using Grpc.Core;
 using Retsuko.Strategies.Services;
 
@@ -55,7 +56,7 @@ public class StrategyRunService : GStrategyRunner.GStrategyRunnerBase {
     responseSpan.End();
   }
 
-  public override async Task RunLazy(IAsyncStreamReader<StrategyInput> requestStream, IServerStreamWriter<StrategyLazyOutput> responseStream, ServerCallContext context) {
+  public override async Task RunLazy(IAsyncStreamReader<StrategyInputBatch> requestStream, IServerStreamWriter<StrategyLazyOutputBatch> responseStream, ServerCallContext context) {
     var tracer = MyTracer.Tracer;
     using var createSpan = tracer.StartActiveSpan("StrategyRunService.RunLazy.Create");
 
@@ -81,17 +82,21 @@ public class StrategyRunService : GStrategyRunner.GStrategyRunnerBase {
     while (await requestStream.MoveNext(context.CancellationToken) && !context.CancellationToken.IsCancellationRequested) {
       var input = requestStream.Current;
       if (input.Preload != null) {
-        await strategy.Preload(input.Preload.Candle);
-      } else if (input.Update != null) {
-        var signal = await strategy.Update(input.Update.Candle);
-
-        if (signal != null) {
-          signalResponses.Enqueue(new StrategyOutputSignalWithCandle {
-            Candle = input.Update.Candle,
-            Kind = (int)signal.kind,
-            Confidence = signal.confidence
-          });
+        foreach (var candle in input.Preload.Candles) {
+          await strategy.Preload(candle);
         }
+      } else if (input.Update != null) {
+        foreach (var candle in input.Update.Candles) {
+          var signal = await strategy.Update(candle);
+          if (signal != null) {
+            signalResponses.Enqueue(new StrategyOutputSignalWithCandle {
+              Candle = candle,
+              Kind = (int)signal.kind,
+              Confidence = signal.confidence
+            });
+          }
+        }
+
       } else {
         throw new RpcException(new Status(StatusCode.InvalidArgument, "Unknown message type"));
       }
@@ -100,19 +105,28 @@ public class StrategyRunService : GStrategyRunner.GStrategyRunnerBase {
     processSpan.End();
 
     using var signalResponseSpan = tracer.StartActiveSpan("StrategyRunService.RunLazy.SignalResponse");
-    while (signalResponses.Count > 0 && !context.CancellationToken.IsCancellationRequested) {
-      var response = signalResponses.Dequeue();
-      await responseStream.WriteAsync(new StrategyLazyOutput { Signal = response }, context.CancellationToken);
+    var chunks = signalResponses.Chunk(200);
+    foreach (var chunk in chunks) {
+      if (context.CancellationToken.IsCancellationRequested) {
+        break;
+      }
+
+      var output = new StrategyLazyOutputBatch();
+      output.Outputs.AddRange(chunk.Select(response => new StrategyLazyOutput { Signal = response }));
+      await responseStream.WriteAsync(output, context.CancellationToken);
     }
     signalResponseSpan.End();
 
     using var responseSpan = tracer.StartActiveSpan("StrategyRunService.RunLazy.Response");
-    await responseStream.WriteAsync(new StrategyLazyOutput {
+
+    var responseOutput = new StrategyLazyOutputBatch();
+    responseOutput.Outputs.Add(new StrategyLazyOutput {
       State = new StrategyOutputState {
         State = strategy.Serialize(),
         Debug = "",
       },
-    }, context.CancellationToken);
+    });
+    await responseStream.WriteAsync(responseOutput, context.CancellationToken);
     responseSpan.End();
   }
 }
