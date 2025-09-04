@@ -6,7 +6,10 @@ using Retsuko.Strategies.GrpcHandlers;
 
 var builder = WebApplication.CreateBuilder(args);
 
-const string SERVICE_NAME = "retsuko-strategy";
+var isDevelopment = builder.Environment.IsDevelopment();
+
+string SERVICE_NAME = isDevelopment ? "retsuko-strategy-dev" : "retsuko-strategy";
+MyTracer.SERVICE_NAME = SERVICE_NAME;
 const string OTE_URL = "http://localhost:4317";
 
 builder.Logging.AddOpenTelemetry(options => {
@@ -43,7 +46,8 @@ builder.Services.AddOpenTelemetry()
 builder.WebHost.ConfigureKestrel(
   options => {
     var tempPath = Path.GetTempPath();
-    var sockPath = Path.Combine(tempPath, "retsuko.sock");
+    var path = builder.Environment.IsDevelopment() ? "retsuko-dev.sock" : "retsuko.sock";
+    var sockPath = Path.Combine(tempPath, path);
     options.ListenUnixSocket(sockPath, listenOptions => {
       listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2;
     });
