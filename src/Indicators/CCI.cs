@@ -80,7 +80,7 @@ public partial class Indicator {
     }
   }
 
-  public static CCIIndicator CCA(int period, double constant = 0.015) {
+  public static CCIIndicator CCI(int period, double constant = 0.015) {
     return new CCIIndicator(period, constant);
   }
 }
