@@ -3,6 +3,9 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Retsuko.Strategies.GrpcHandlers;
+using Retsuko.Strategies.Tests;
+
+IndicatorTest.Run();
 
 var builder = WebApplication.CreateBuilder(args);
 
