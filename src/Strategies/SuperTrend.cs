@@ -141,7 +141,7 @@ public class SuperTrendStrategy: Strategy<SuperTrendStrategyConfig>, IStrategyCr
   static readonly string ATR_NAME = string.Intern("atr");
   static readonly string CONFIDENCE_NAME = string.Intern("confidence");
 
-  public override async Task<IEnumerable<DebugIndicatorInput>> Debug(Candle candle) {
+  public override async Task<IEnumerable<DebugIndicator>> Debug(Candle candle) {
     await ValueTask.CompletedTask;
 
     return [

@@ -80,7 +80,7 @@ public class StrategyRunService : GStrategyRunner.GStrategyRunnerBase {
 
     using var processSpan = tracer.StartActiveSpan("StrategyRunService.RunLazy.Process");
     var signalResponses = new Queue<StrategyOutputSignalWithCandle>();
-    var debugIndicators = new List<DebugIndicatorInput>();
+    var debugIndicators = new List<DebugIndicator>();
 
     while (await requestStream.MoveNext(context.CancellationToken) && !context.CancellationToken.IsCancellationRequested) {
       var input = requestStream.Current;
