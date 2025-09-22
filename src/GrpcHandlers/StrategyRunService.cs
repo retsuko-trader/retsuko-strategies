@@ -1,5 +1,6 @@
-using Google.Protobuf.Collections;
+using System.Text.Json;
 using Grpc.Core;
+using Retsuko.Strategies.Core;
 using Retsuko.Strategies.Services;
 
 namespace Retsuko.Strategies.GrpcHandlers;
@@ -79,6 +80,8 @@ public class StrategyRunService : GStrategyRunner.GStrategyRunnerBase {
 
     using var processSpan = tracer.StartActiveSpan("StrategyRunService.RunLazy.Process");
     var signalResponses = new Queue<StrategyOutputSignalWithCandle>();
+    var debugIndicators = new List<DebugIndicatorInput>();
+
     while (await requestStream.MoveNext(context.CancellationToken) && !context.CancellationToken.IsCancellationRequested) {
       var input = requestStream.Current;
       if (input.Preload != null) {
@@ -94,6 +97,11 @@ public class StrategyRunService : GStrategyRunner.GStrategyRunnerBase {
               Kind = (int)signal.kind,
               Confidence = signal.confidence
             });
+          }
+
+          if (create.Debug) {
+            var debug = await strategy.Debug(candle);
+            debugIndicators.AddRange(debug);
           }
         }
 
@@ -123,7 +131,7 @@ public class StrategyRunService : GStrategyRunner.GStrategyRunnerBase {
     responseOutput.Outputs.Add(new StrategyLazyOutput {
       State = new StrategyOutputState {
         State = strategy.Serialize(),
-        Debug = "",
+        Debug = JsonSerializer.Serialize(debugIndicators),
       },
     });
     await responseStream.WriteAsync(responseOutput, context.CancellationToken);
