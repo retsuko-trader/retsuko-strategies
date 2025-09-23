@@ -6,7 +6,7 @@ public interface IStrategy: ISerializable {
   Task Preload(Candle candle);
 
   Task<Signal?> Update(Candle candle);
-  Task<IEnumerable<DebugIndicator>> Debug(Candle candle);
+  Task<IEnumerable<DebugIndicatorInput>> Debug(Candle candle);
 }
 
 public interface IStrategyCreate<T> where T: IStrategyCreate<T> {

@@ -51,7 +51,6 @@ public class StrategyRunService : GStrategyRunner.GStrategyRunnerBase {
     await responseStream.WriteAsync(new StrategyOutput {
       State = new StrategyOutputState {
         State = strategy.Serialize(),
-        Debug = "",
       },
     }, context.CancellationToken);
     responseSpan.End();
@@ -80,7 +79,7 @@ public class StrategyRunService : GStrategyRunner.GStrategyRunnerBase {
 
     using var processSpan = tracer.StartActiveSpan("StrategyRunService.RunLazy.Process");
     var signalResponses = new Queue<StrategyOutputSignalWithCandle>();
-    var debugIndicators = new List<DebugIndicator>();
+    var debugIndicators = new DebugIndicatorHandler();
 
     while (await requestStream.MoveNext(context.CancellationToken) && !context.CancellationToken.IsCancellationRequested) {
       var input = requestStream.Current;
@@ -101,7 +100,9 @@ public class StrategyRunService : GStrategyRunner.GStrategyRunnerBase {
 
           if (create.Debug) {
             var debug = await strategy.Debug(candle);
-            debugIndicators.AddRange(debug);
+            foreach (var item in debug) {
+              debugIndicators.Add(candle, item);
+            }
           }
         }
 
@@ -131,10 +132,48 @@ public class StrategyRunService : GStrategyRunner.GStrategyRunnerBase {
     responseOutput.Outputs.Add(new StrategyLazyOutput {
       State = new StrategyOutputState {
         State = strategy.Serialize(),
-        Debug = JsonSerializer.Serialize(debugIndicators),
       },
     });
     await responseStream.WriteAsync(responseOutput, context.CancellationToken);
+
+    var debugChunks = debugIndicators.GetResult().Chunk(2);
+    foreach (var debugChunk in debugChunks) {
+      if (context.CancellationToken.IsCancellationRequested) {
+        break;
+      }
+
+      var output = new StrategyLazyOutputBatch();
+      var item = new StrategyOutputDebug();
+      output.Outputs.AddRange(debugChunk.Select(item => new StrategyLazyOutput {
+        Debug = new StrategyOutputDebug { Indicator = item },
+      }));
+      await responseStream.WriteAsync(output, context.CancellationToken);
+    }
+
     responseSpan.End();
+  }
+
+  class DebugIndicatorHandler {
+    private Dictionary<string, GDebugIndicator> data = new();
+
+    public void Add(Candle candle, DebugIndicatorInput input) {
+      if (!data.TryGetValue(input.name, out var item)) {
+        item = new GDebugIndicator {
+          Name = input.name,
+          Index = input.index,
+          Values = { }
+        };
+        data[input.name] = item;
+      }
+
+      item.Values.Add(new GDebugIndicatorEntry {
+        Ts = candle.Ts.Seconds * 1000,
+        Value = input.value
+      });
+    }
+
+    public IEnumerable<GDebugIndicator> GetResult() {
+      return data.Values;
+    }
   }
 }

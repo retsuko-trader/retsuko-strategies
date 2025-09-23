@@ -34,7 +34,7 @@ public abstract class Strategy<TConfig>: IStrategy, ISerializable where TConfig:
     return null;
   }
 
-  public virtual async Task<IEnumerable<DebugIndicator>> Debug(Candle candle) {
+  public virtual async Task<IEnumerable<DebugIndicatorInput>> Debug(Candle candle) {
     await ValueTask.CompletedTask;
 
     return [];
