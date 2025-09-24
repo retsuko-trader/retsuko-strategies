@@ -2,6 +2,7 @@ using System.Text.Json;
 using Retsuko.Strategies.Core;
 using Retsuko.Strategies.Indicators;
 using Retsuko.Strategies.Services;
+using Retsuko.Strategies.Utilities;
 
 namespace Retsuko.Strategies.Strategies;
 
@@ -29,6 +30,8 @@ public class AldoStrategy : Strategy<AldoStrategyConfig>, IStrategyCreate<AldoSt
   private double[] oscs;
   private int age;
 
+  private TrailingStopLoss stopLoss;
+  private int exitAge;
   private double lastPriceHigh, lastPriceLow;
   private double prevPriceHigh, prevPriceLow;
   private double lastOscHigh, lastOscLow;
@@ -68,6 +71,7 @@ public class AldoStrategy : Strategy<AldoStrategyConfig>, IStrategyCreate<AldoSt
     candles = new Candle[config.period];
     oscs = new double[config.period];
     age = 0;
+    stopLoss = new TrailingStopLoss(config.trailingStopLoss);
   }
 
   public override async Task Preload(Candle candle) {
@@ -125,11 +129,19 @@ public class AldoStrategy : Strategy<AldoStrategyConfig>, IStrategyCreate<AldoSt
     this.lastOscLow = lastOscLow;
     this.prevOscLow = prevOscLow;
 
-    if (bearishDiv) {
-      return Signal.openShort;
+    if (age == exitAge) {
+      stopLoss.End();
+      return Signal.closeLong;
+    }
+
+    if (stopLoss.IsTriggered(candle.Close)) {
+      stopLoss.End();
+      return Signal.closeLong;
     }
 
     if (bullishDiv) {
+      stopLoss.Begin(candle.Close);
+      exitAge = age + Config.exitBars;
       return Signal.openLong;
     }
 
@@ -188,7 +200,8 @@ public class AldoStrategy : Strategy<AldoStrategyConfig>, IStrategyCreate<AldoSt
     double prevOscHigh,
     double lastOscLow,
     double prevOscLow,
-    int age
+    int age,
+    string stopLoss
   );
 
   public override string Serialize() {
@@ -205,7 +218,8 @@ public class AldoStrategy : Strategy<AldoStrategyConfig>, IStrategyCreate<AldoSt
       prevOscHigh,
       lastOscLow,
       prevOscLow,
-      age
+      age,
+      stopLoss.Serialize()
     ));
   }
 
@@ -228,5 +242,6 @@ public class AldoStrategy : Strategy<AldoStrategyConfig>, IStrategyCreate<AldoSt
     lastOscLow = parsed.lastOscLow;
     prevOscLow = parsed.prevOscLow;
     age = parsed.age;
+    stopLoss.Deserialize(parsed.stopLoss);
   }
 }
