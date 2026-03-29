@@ -23,7 +23,7 @@ public class StrategyCheckService : GStrategyCheck.GStrategyCheckBase {
     });
   }
   public override Task<StrategyCheckOutputDump> Dump(StrategyCheckInputLoad request, ServerCallContext context) {
-        var strategy = StrategyLoader.CreateStrategy(request.Name, request.Config);
+    var strategy = StrategyLoader.CreateStrategy(request.Name, request.Config);
     if (strategy == null) {
       throw new RpcException(new Status(StatusCode.InvalidArgument, $"Strategy {request.Name} not found"));
     }
