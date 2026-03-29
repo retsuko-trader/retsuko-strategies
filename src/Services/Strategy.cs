@@ -34,10 +34,16 @@ public abstract class Strategy<TConfig>: IStrategy, ISerializable where TConfig:
     return null;
   }
 
+  public abstract StrategyConsistencyResult CheckConsistency();
+
   public virtual async Task<IEnumerable<DebugIndicatorInput>> Debug(Candle candle) {
     await ValueTask.CompletedTask;
 
     return [];
+  }
+
+  public virtual object? Dump() {
+    return null;
   }
 
   public abstract string Serialize();

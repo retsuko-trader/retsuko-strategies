@@ -131,6 +131,31 @@ public class TurtleStrategy: Strategy<TurtleStrategyConfig>, IStrategyCreate<Tur
     return (high, low);
   }
 
+  public override StrategyConsistencyResult CheckConsistency() {
+    var errors = new List<string>();
+
+    ConsistencyHelper.CheckCandlesTimestamps(errors, candles, age);
+
+    return new StrategyConsistencyResult(
+      IsSuccess: errors.Count == 0,
+      Errors: errors
+    );
+  }
+
+  public override object? Dump() {
+    var candles = new Candle[candlesLength];
+    for (var i = 0; i < candlesLength; i++) {
+      candles[i] = this.candles.GetByMod(i + age);
+    }
+
+    return new {
+      candles,
+      age,
+      candlesLength,
+      sma = sma.Serialize()
+    };
+  }
+
   record SerializedState(
     TurtleStrategyConfig Config,
     Candle[] candles,

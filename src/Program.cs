@@ -70,5 +70,6 @@ app.MapControllers();
 
 app.MapGrpcService<StrategyLoadService>();
 app.MapGrpcService<StrategyRunService>();
+app.MapGrpcService<StrategyCheckService>();
 
 app.Run();

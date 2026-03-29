@@ -104,8 +104,31 @@ public class SuperTrendTurtleStrategy: Strategy<SuperTrendTurtleStrategyConfig>,
     return null;
   }
 
+  public override StrategyConsistencyResult CheckConsistency() {
+    var superTrendConsistency = superTrend.CheckConsistency();
+    var turtleConsistency = turtle.CheckConsistency();
+
+    var errors = new List<string>();
+    errors.AddRange(superTrendConsistency.Errors);
+    errors.AddRange(turtleConsistency.Errors);
+
+    return new StrategyConsistencyResult(
+      IsSuccess: errors.Count == 0,
+      Errors: errors
+    );
+  }
+
   public override async Task<IEnumerable<DebugIndicatorInput>> Debug(Candle candle) {
     return await superTrend.Debug(candle);
+  }
+
+  public override object? Dump() {
+    return new {
+      superTrend = superTrend.Dump(),
+      turtle = turtle.Dump(),
+      superTrendSignal,
+      turtleSignal,
+    };
   }
 
   record SerializedState(

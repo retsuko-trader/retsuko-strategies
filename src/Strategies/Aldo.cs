@@ -148,6 +148,13 @@ public class AldoStrategy : Strategy<AldoStrategyConfig>, IStrategyCreate<AldoSt
     return null;
   }
 
+  public override StrategyConsistencyResult CheckConsistency() {
+    return new StrategyConsistencyResult(
+      true,
+      []
+    );
+  }
+
   public override async Task<IEnumerable<DebugIndicatorInput>> Debug(Candle candle) {
     await base.Debug(candle);
 

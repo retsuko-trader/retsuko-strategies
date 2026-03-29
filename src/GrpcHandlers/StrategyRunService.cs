@@ -6,7 +6,7 @@ using Retsuko.Strategies.Services;
 namespace Retsuko.Strategies.GrpcHandlers;
 
 public class StrategyRunService : GStrategyRunner.GStrategyRunnerBase {
-  public override async Task Run(IAsyncStreamReader<StrategyInput> requestStream, IServerStreamWriter<StrategyOutput> responseStream, ServerCallContext context) {
+  public override async Task Run(IAsyncStreamReader<StrategyRunInput> requestStream, IServerStreamWriter<StrategyRunOutput> responseStream, ServerCallContext context) {
     var tracer = MyTracer.Tracer;
     using var createSpan = tracer.StartActiveSpan("StrategyRunService.Run.Create");
 
@@ -34,8 +34,8 @@ public class StrategyRunService : GStrategyRunner.GStrategyRunnerBase {
         await strategy.Preload(input.Preload.Candle);
       } else if (input.Update != null) {
         var signal = await strategy.Update(input.Update.Candle);
-        await responseStream.WriteAsync(new StrategyOutput {
-          Signal = signal == null ? null : new StrategyOutputSignal {
+        await responseStream.WriteAsync(new StrategyRunOutput {
+          Signal = signal == null ? null : new StrategyRunOutputSignal {
             Kind = (int)signal.kind,
             Confidence = signal.confidence
           },
@@ -48,15 +48,15 @@ public class StrategyRunService : GStrategyRunner.GStrategyRunnerBase {
     processSpan.End();
 
     using var responseSpan = tracer.StartActiveSpan("StrategyRunService.Run.Response");
-    await responseStream.WriteAsync(new StrategyOutput {
-      State = new StrategyOutputState {
+    await responseStream.WriteAsync(new StrategyRunOutput {
+      State = new StrategyRunOutputState {
         State = strategy.Serialize(),
       },
     }, context.CancellationToken);
     responseSpan.End();
   }
 
-  public override async Task RunLazy(IAsyncStreamReader<StrategyInputBatch> requestStream, IServerStreamWriter<StrategyLazyOutputBatch> responseStream, ServerCallContext context) {
+  public override async Task RunLazy(IAsyncStreamReader<StrategyRunInputBatch> requestStream, IServerStreamWriter<StrategyRunLazyOutputBatch> responseStream, ServerCallContext context) {
     var tracer = MyTracer.Tracer;
     using var createSpan = tracer.StartActiveSpan("StrategyRunService.RunLazy.Create");
 
@@ -78,7 +78,7 @@ public class StrategyRunService : GStrategyRunner.GStrategyRunnerBase {
     createSpan.End();
 
     using var processSpan = tracer.StartActiveSpan("StrategyRunService.RunLazy.Process");
-    var signalResponses = new Queue<StrategyOutputSignalWithCandle>();
+    var signalResponses = new Queue<StrategyRunOutputSignalWithCandle>();
     var debugIndicators = new DebugIndicatorHandler();
 
     while (await requestStream.MoveNext(context.CancellationToken) && !context.CancellationToken.IsCancellationRequested) {
@@ -91,7 +91,7 @@ public class StrategyRunService : GStrategyRunner.GStrategyRunnerBase {
         foreach (var candle in input.Update.Candles) {
           var signal = await strategy.Update(candle);
           if (signal != null) {
-            signalResponses.Enqueue(new StrategyOutputSignalWithCandle {
+            signalResponses.Enqueue(new StrategyRunOutputSignalWithCandle {
               Candle = candle,
               Kind = (int)signal.kind,
               Confidence = signal.confidence
@@ -120,17 +120,17 @@ public class StrategyRunService : GStrategyRunner.GStrategyRunnerBase {
         break;
       }
 
-      var output = new StrategyLazyOutputBatch();
-      output.Outputs.AddRange(chunk.Select(response => new StrategyLazyOutput { Signal = response }));
+      var output = new StrategyRunLazyOutputBatch();
+      output.Outputs.AddRange(chunk.Select(response => new StrategyRunLazyOutput { Signal = response }));
       await responseStream.WriteAsync(output, context.CancellationToken);
     }
     signalResponseSpan.End();
 
     using var responseSpan = tracer.StartActiveSpan("StrategyRunService.RunLazy.Response");
 
-    var responseOutput = new StrategyLazyOutputBatch();
-    responseOutput.Outputs.Add(new StrategyLazyOutput {
-      State = new StrategyOutputState {
+    var responseOutput = new StrategyRunLazyOutputBatch();
+    responseOutput.Outputs.Add(new StrategyRunLazyOutput {
+      State = new StrategyRunOutputState {
         State = strategy.Serialize(),
       },
     });
@@ -142,10 +142,10 @@ public class StrategyRunService : GStrategyRunner.GStrategyRunnerBase {
         break;
       }
 
-      var output = new StrategyLazyOutputBatch();
-      var item = new StrategyOutputDebug();
-      output.Outputs.AddRange(debugChunk.Select(item => new StrategyLazyOutput {
-        Debug = new StrategyOutputDebug { Indicator = item },
+      var output = new StrategyRunLazyOutputBatch();
+      var item = new StrategyRunOutputDebug();
+      output.Outputs.AddRange(debugChunk.Select(item => new StrategyRunLazyOutput {
+        Debug = new StrategyRunOutputDebug { Indicator = item },
       }));
       await responseStream.WriteAsync(output, context.CancellationToken);
     }

@@ -137,6 +137,15 @@ public class SuperTrendStrategy: Strategy<SuperTrendStrategyConfig>, IStrategyCr
     return true;
   }
 
+  public override StrategyConsistencyResult CheckConsistency() {
+    var errors = new List<string>();
+
+    return new StrategyConsistencyResult(
+      IsSuccess: errors.Count == 0,
+      Errors: errors
+    );
+  }
+
   static readonly string SUPERTREND_NAME = string.Intern("supertrend");
   static readonly string ATR_NAME = string.Intern("atr");
   static readonly string CONFIDENCE_NAME = string.Intern("confidence");
@@ -149,6 +158,19 @@ public class SuperTrendStrategy: Strategy<SuperTrendStrategyConfig>, IStrategyCr
       new(ATR_NAME, 1, (float)atr.Value),
       new(CONFIDENCE_NAME, 2, (float)confidence),
     ];
+  }
+
+  public override object? Dump() {
+    return new {
+      trend,
+      lastTrend,
+      lastClose,
+      age,
+      confidence,
+      prevBuyConfidence,
+      stopLoss = stopLoss.Serialize(),
+      atr = atr.Serialize()
+    };
   }
 
   record SerializedState(
