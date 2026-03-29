@@ -134,7 +134,11 @@ public class TurtleStrategy: Strategy<TurtleStrategyConfig>, IStrategyCreate<Tur
   public override StrategyConsistencyResult CheckConsistency() {
     var errors = new List<string>();
 
-    ConsistencyHelper.CheckCandlesTimestamps(errors, candles, age);
+    try {
+      ConsistencyHelper.CheckCandlesTimestamps(errors, candles, age);
+    } catch (Exception ex) {
+      errors.Add($"exception during consistency check: {ex}");
+    }
 
     return new StrategyConsistencyResult(
       IsSuccess: errors.Count == 0,
