@@ -15,6 +15,10 @@ public record Signal(
     return new Signal(kind, 1);
   }
 
+  public Signal WithMultiplyConfidence(double multiplier) {
+    return this with { confidence = confidence * multiplier };
+  }
+
   public static Signal openShort =>  new(SignalKind.openShort, 1);
   public static Signal openLong => new(SignalKind.openLong, 1);
   public static Signal closeShort => new(SignalKind.closeShort, 1);
