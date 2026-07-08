@@ -1,3 +1,4 @@
-# retsuko-strategies
+# retsuko-strategies (DEPRECATED)
 
-Unix Domain Sockets - gRPC로 retsuko-backend와 소통하는 strategy 서버
+> [!CAUTION]
+> This repository has been deprecated. Check monorepo [retsuko-backend](https://github.com/retsuko-trader/retsuko-backend)
